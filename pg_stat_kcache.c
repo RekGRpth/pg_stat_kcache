@@ -244,13 +244,7 @@ static PlannedStmt *pgsk_planner(Query *parse,
 								 int cursorOptions,
 								 ParamListInfo boundParams);
 #endif
-static
-#if PG_VERSION_NUM >= 180000
-bool
-#else
-void
-#endif
-pgsk_ExecutorStart(QueryDesc *queryDesc, int eflags);
+static void pgsk_ExecutorStart(QueryDesc *queryDesc, int eflags);
 static void pgsk_ExecutorRun(QueryDesc *queryDesc,
 				 ScanDirection direction,
 #if PG_VERSION_NUM >= 90600
@@ -1000,12 +994,7 @@ pgsk_planner(Query *parse,
 }
 #endif
 
-static
-#if PG_VERSION_NUM >= 180000
-bool
-#else
-void
-#endif
+static void
 pgsk_ExecutorStart (QueryDesc *queryDesc, int eflags)
 {
 	if (pgsk_enabled(nesting_level))
@@ -1026,9 +1015,9 @@ pgsk_ExecutorStart (QueryDesc *queryDesc, int eflags)
 
 	/* give control back to PostgreSQL */
 	if (prev_ExecutorStart)
-		return prev_ExecutorStart(queryDesc, eflags);
+		prev_ExecutorStart(queryDesc, eflags);
 	else
-		return standard_ExecutorStart(queryDesc, eflags);
+		standard_ExecutorStart(queryDesc, eflags);
 }
 
 /*
