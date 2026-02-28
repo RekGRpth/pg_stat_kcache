@@ -57,6 +57,9 @@
 #endif
 #include "storage/fd.h"
 #include "storage/ipc.h"
+#if PG_VERSION_NUM >= 190000
+#include "storage/lwlock.h"
+#endif
 #include "storage/spin.h"
 #include "utils/builtins.h"
 #include "utils/guc.h"
