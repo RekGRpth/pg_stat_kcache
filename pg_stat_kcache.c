@@ -43,6 +43,9 @@
 #include "access/parallel.h"
 #endif
 #include "executor/executor.h"
+#if PG_VERSION_NUM >= 190000
+#include "executor/instrument.h"
+#endif
 #include "funcapi.h"
 #include "miscadmin.h"
 #if PG_VERSION_NUM >= 130000
@@ -64,6 +67,9 @@
 #include "utils/pg_rusage.h"
 #endif
 #include "utils/timestamp.h"
+#if PG_VERSION_NUM >= 190000
+#include "utils/tuplestore.h"
+#endif
 
 #include "pg_stat_kcache.h"
 
