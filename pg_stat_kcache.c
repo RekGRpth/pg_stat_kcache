@@ -70,6 +70,9 @@
 #include "utils/pg_rusage.h"
 #endif
 #include "utils/timestamp.h"
+#if PG_VERSION_NUM >= 190000
+#include "utils/tuplestore.h"
+#endif
 
 #include "pg_stat_kcache.h"
 
