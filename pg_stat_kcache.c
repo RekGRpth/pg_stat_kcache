@@ -532,7 +532,11 @@ pgsk_shmem_startup(void)
 
 	/* allocate stats shared memory hash */
 	pgsk_hash = ShmemInitHash("pg_stat_kcache hash",
+#if PG_VERSION_NUM >= 190000
+							  pgsk_max,
+#else
 							  pgsk_max, pgsk_max,
+#endif
 							  &info,
 							  HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
 
