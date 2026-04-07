@@ -418,8 +418,10 @@ pgsk_compute_counters(pgskCounters *counters,
 		{
 			float8		total;
 
+#if PG_VERSION_NUM < 190000
 			/* Make sure stats accumulation is done */
 			InstrEndLoop(queryDesc->totaltime);
+#endif
 
 #if PG_VERSION_NUM >= 190000
 			total = INSTR_TIME_GET_DOUBLE(queryDesc->totaltime->total);
