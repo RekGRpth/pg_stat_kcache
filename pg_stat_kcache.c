@@ -414,7 +414,11 @@ pgsk_compute_counters(pgskCounters *counters,
 		counters->utime = TIMEVAL_DIFF(rusage_start->ru_utime, rusage_end->ru_utime);
 		counters->stime = TIMEVAL_DIFF(rusage_start->ru_stime, rusage_end->ru_stime);
 
+#if PG_VERSION_NUM >= 190000
+		if (queryDesc && queryDesc->query_instr)
+#else
 		if (queryDesc && queryDesc->totaltime)
+#endif
 		{
 			float8		total;
 
@@ -424,7 +428,7 @@ pgsk_compute_counters(pgskCounters *counters,
 #endif
 
 #if PG_VERSION_NUM >= 190000
-			total = INSTR_TIME_GET_DOUBLE(queryDesc->totaltime->total);
+			total = INSTR_TIME_GET_DOUBLE(queryDesc->query_instr->total);
 #else
 			total = queryDesc->totaltime->total;
 #endif
