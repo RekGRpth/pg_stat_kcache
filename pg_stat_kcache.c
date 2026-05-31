@@ -43,9 +43,7 @@
 #include "access/parallel.h"
 #endif
 #include "executor/executor.h"
-#if PG_VERSION_NUM >= 190000
 #include "executor/instrument.h"
-#endif
 #include "funcapi.h"
 #include "miscadmin.h"
 #if PG_VERSION_NUM >= 130000
@@ -60,9 +58,7 @@
 #endif
 #include "storage/fd.h"
 #include "storage/ipc.h"
-#if PG_VERSION_NUM >= 190000
 #include "storage/lwlock.h"
-#endif
 #include "storage/spin.h"
 #include "utils/builtins.h"
 #include "utils/guc.h"
@@ -70,9 +66,7 @@
 #include "utils/pg_rusage.h"
 #endif
 #include "utils/timestamp.h"
-#if PG_VERSION_NUM >= 190000
 #include "utils/tuplestore.h"
-#endif
 
 #include "pg_stat_kcache.h"
 
@@ -99,6 +93,22 @@ typedef uint32 pgsk_queryid;
 
 #define TIMEVAL_DIFF(start, end) ((double) end.tv_sec + (double) end.tv_usec / 1000000.0) \
 	- ((double) start.tv_sec + (double) start.tv_usec / 1000000.0)
+
+#if PG_VERSION_NUM < 190000
+/*
+ * pg19 changed the init/max size to a single fixed size, so simulate that
+ * behavior for older versions.
+ */
+#define ShmemInitHash(n, nelem, i, f) ShmemInitHash(n, nelem, nelem, i, f)
+
+/*
+ * pg19 renamed Instrumentation->totaltime to query_instr
+ *
+ * It's a bit of a hack to handle the rename with a macro but there isn't much
+ * code here so it avoids additional complications without much risks.
+ */
+#define query_instr totaltime
+#endif
 
 #if PG_VERSION_NUM < 170000
 #define MyProcNumber MyBackendId
@@ -414,23 +424,17 @@ pgsk_compute_counters(pgskCounters *counters,
 		counters->utime = TIMEVAL_DIFF(rusage_start->ru_utime, rusage_end->ru_utime);
 		counters->stime = TIMEVAL_DIFF(rusage_start->ru_stime, rusage_end->ru_stime);
 
-#if PG_VERSION_NUM >= 190000
 		if (queryDesc && queryDesc->query_instr)
-#else
-		if (queryDesc && queryDesc->totaltime)
-#endif
 		{
-			float8		total;
+			double		total;
 
 #if PG_VERSION_NUM < 190000
 			/* Make sure stats accumulation is done */
-			InstrEndLoop(queryDesc->totaltime);
-#endif
+			InstrEndLoop(queryDesc->query_instr);
 
-#if PG_VERSION_NUM >= 190000
-			total = INSTR_TIME_GET_DOUBLE(queryDesc->query_instr->total);
+			total = queryDesc->query_instr->total;
 #else
-			total = queryDesc->totaltime->total;
+			total = INSTR_TIME_GET_DOUBLE(queryDesc->query_instr->total);
 #endif
 
 			/*
@@ -538,11 +542,7 @@ pgsk_shmem_startup(void)
 
 	/* allocate stats shared memory hash */
 	pgsk_hash = ShmemInitHash("pg_stat_kcache hash",
-#if PG_VERSION_NUM >= 190000
 							  pgsk_max,
-#else
-							  pgsk_max, pgsk_max,
-#endif
 							  &info,
 							  HASH_ELEM | HASH_FUNCTION | HASH_COMPARE);
 
